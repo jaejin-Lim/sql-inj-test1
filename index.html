@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>SQL Injection Demo (Educational)</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+  <h1>SQL Injection 교육용 데모</h1>
+
+  <div class="toggle">
+    <label>
+      <input type="checkbox" id="modeToggle">
+      <span id="modeLabel">Vulnerable Mode</span>
+    </label>
+  </div>
+
+  <div class="login-box">
+    <input type="text" id="username" placeholder="Username">
+    <input type="password" id="password" placeholder="Password">
+    <button onclick="login()">Login</button>
+  </div>
+
+  <div id="result"></div>
+
+  <div class="explanation">
+    <h3>설명</h3>
+    <p id="explainText">
+      현재는 취약한 모드입니다. 입력값이 그대로 처리됩니다.
+    </p>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
