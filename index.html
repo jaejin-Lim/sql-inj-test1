@@ -1,38 +1,253 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <title>SQL Injection Demo (Educational)</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SQL 인젝션 교육 시뮬레이터</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Sans+KR:wght@300;400;700;900&display=swap" rel="stylesheet" />
 </head>
 <body>
 
-<div class="container">
-  <h1>SQL Injection 교육용 데모</h1>
+  <!-- 배경 노이즈 레이어 -->
+  <div class="bg-grid"></div>
 
-  <div class="toggle">
-    <label>
-      <input type="checkbox" id="modeToggle">
-      <span id="modeLabel">Vulnerable Mode</span>
-    </label>
-  </div>
+  <header class="site-header">
+    <div class="logo">
+      <span class="logo-bracket">[</span>
+      <span class="logo-text">SEC</span>
+      <span class="logo-accent">LAB</span>
+      <span class="logo-bracket">]</span>
+    </div>
+    <p class="header-sub">SQL 인젝션 공격 · 교육 시뮬레이터</p>
+  </header>
 
-  <div class="login-box">
-    <input type="text" id="username" placeholder="Username">
-    <input type="password" id="password" placeholder="Password">
-    <button onclick="login()">Login</button>
-  </div>
+  <main>
 
-  <div id="result"></div>
+    <!-- ── 모드 토글 ── -->
+    <section class="mode-toggle-section">
+      <div class="mode-toggle-wrap">
+        <button id="btn-vulnerable" class="mode-btn active" onclick="setMode('vulnerable')">
+          <span class="mode-icon">⚠</span>
+          <span>취약 모드</span>
+          <small>SQL 인젝션 허용</small>
+        </button>
+        <div class="toggle-divider">
+          <div class="toggle-line"></div>
+          <span class="toggle-vs">VS</span>
+          <div class="toggle-line"></div>
+        </div>
+        <button id="btn-secure" class="mode-btn" onclick="setMode('secure')">
+          <span class="mode-icon">🛡</span>
+          <span>보안 모드</span>
+          <small>준비된 문(Prepared Statement)</small>
+        </button>
+      </div>
+      <div id="mode-badge" class="mode-badge vulnerable">현재: 취약 모드</div>
+    </section>
 
-  <div class="explanation">
-    <h3>설명</h3>
-    <p id="explainText">
-      현재는 취약한 모드입니다. 입력값이 그대로 처리됩니다.
-    </p>
-  </div>
-</div>
+    <!-- ── 메인 컨텐츠 그리드 ── -->
+    <div class="main-grid">
 
-<script src="script.js"></script>
+      <!-- 로그인 패널 -->
+      <section class="panel login-panel">
+        <div class="panel-header">
+          <h2>로그인 시뮬레이터</h2>
+          <span id="panel-mode-label" class="panel-mode-label vuln-label">⚠ VULNERABLE</span>
+        </div>
+
+        <!-- 힌트 박스 -->
+        <div id="hint-box" class="hint-box">
+          <p class="hint-title">💡 공격 힌트 (취약 모드)</p>
+          <p>사용자 이름 입력란에 아래 값을 입력해 보세요:</p>
+          <code class="hint-code" id="hint-payload">' OR '1'='1</code>
+          <p class="hint-sub">비밀번호 입력란에 아무 값이나 입력하세요.</p>
+        </div>
+
+        <!-- 로그인 폼 -->
+        <div class="login-form">
+          <div class="field-group">
+            <label for="username">사용자 이름</label>
+            <input
+              type="text"
+              id="username"
+              placeholder="admin"
+              autocomplete="off"
+              spellcheck="false"
+            />
+            <span class="field-note" id="username-note"></span>
+          </div>
+          <div class="field-group">
+            <label for="password">비밀번호</label>
+            <input
+              type="password"
+              id="password"
+              placeholder="••••••••"
+              autocomplete="off"
+            />
+            <span class="field-note" id="password-note"></span>
+          </div>
+
+          <!-- SQL 쿼리 미리보기 -->
+          <div class="query-preview">
+            <p class="query-label">🔍 생성되는 SQL 쿼리 (시뮬레이션)</p>
+            <pre class="query-code" id="query-display">SELECT * FROM users WHERE username = '' AND password = ''</pre>
+          </div>
+
+          <button class="login-btn" id="login-btn" onclick="attemptLogin()">
+            <span>로그인 시도</span>
+            <span class="btn-arrow">→</span>
+          </button>
+        </div>
+
+        <!-- 결과 박스 -->
+        <div id="result-box" class="result-box hidden">
+          <div id="result-icon" class="result-icon"></div>
+          <p id="result-title" class="result-title"></p>
+          <p id="result-reason" class="result-reason"></p>
+        </div>
+      </section>
+
+      <!-- 설명 패널 -->
+      <section class="panel info-panel">
+        <div class="panel-header">
+          <h2>작동 원리</h2>
+        </div>
+        <div id="explanation-content" class="explanation-content">
+          <!-- JS로 동적 삽입 -->
+        </div>
+      </section>
+
+    </div>
+
+    <!-- ── 교육 섹션 ── -->
+    <section class="edu-section">
+      <h2 class="edu-title">
+        <span class="edu-title-line"></span>
+        SQL 인젝션 완전 이해
+        <span class="edu-title-line"></span>
+      </h2>
+
+      <div class="edu-cards">
+
+        <div class="edu-card card-what">
+          <div class="card-num">01</div>
+          <h3>SQL 인젝션이란?</h3>
+          <p>
+            SQL 인젝션(SQL Injection)은 공격자가 애플리케이션의 입력 필드에
+            악의적인 SQL 코드를 삽입하여, 데이터베이스 쿼리를 조작하는 공격 기법입니다.
+          </p>
+          <p>
+            개발자가 의도하지 않은 쿼리가 실행되면서 인증 우회, 데이터 탈취,
+            데이터 삭제 등의 피해가 발생합니다.
+          </p>
+          <div class="card-example">
+            <p class="example-label">정상 쿼리</p>
+            <code>SELECT * FROM users WHERE username = 'admin' AND password = '1234'</code>
+            <p class="example-label danger">인젝션 후 쿼리</p>
+            <code>SELECT * FROM users WHERE username = '' <mark>OR '1'='1'</mark> --' AND password = ''</code>
+          </div>
+        </div>
+
+        <div class="edu-card card-why">
+          <div class="card-num">02</div>
+          <h3>왜 위험한가?</h3>
+          <ul class="edu-list">
+            <li>
+              <span class="list-icon">🔓</span>
+              <div>
+                <strong>인증 우회</strong>
+                <p>올바른 비밀번호 없이도 로그인 가능</p>
+              </div>
+            </li>
+            <li>
+              <span class="list-icon">🗂</span>
+              <div>
+                <strong>데이터 탈취</strong>
+                <p>전체 데이터베이스의 내용 열람 가능</p>
+              </div>
+            </li>
+            <li>
+              <span class="list-icon">💥</span>
+              <div>
+                <strong>데이터 파괴</strong>
+                <p>DROP TABLE 등으로 데이터 삭제 가능</p>
+              </div>
+            </li>
+            <li>
+              <span class="list-icon">🔑</span>
+              <div>
+                <strong>권한 상승</strong>
+                <p>일반 사용자가 관리자 권한 획득 가능</p>
+              </div>
+            </li>
+            <li>
+              <span class="list-icon">📊</span>
+              <div>
+                <strong>OWASP Top 10</strong>
+                <p>웹 보안 위협 1위(A03:2021)에 지속 등재</p>
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <div class="edu-card card-prevent">
+          <div class="card-num">03</div>
+          <h3>방지 방법</h3>
+          <div class="prevent-item">
+            <div class="prevent-badge best">BEST</div>
+            <div>
+              <strong>준비된 문 (Prepared Statement)</strong>
+              <p>SQL 구조와 데이터를 분리 처리. 인젝션 원천 차단</p>
+              <code>SELECT * FROM users WHERE username = ? AND password = ?</code>
+            </div>
+          </div>
+          <div class="prevent-item">
+            <div class="prevent-badge good">GOOD</div>
+            <div>
+              <strong>ORM 사용</strong>
+              <p>Hibernate, SQLAlchemy 등은 내부적으로 안전한 쿼리 생성</p>
+            </div>
+          </div>
+          <div class="prevent-item">
+            <div class="prevent-badge warn">추가</div>
+            <div>
+              <strong>입력값 검증 및 이스케이프</strong>
+              <p>특수문자 필터링, 허용 목록(whitelist) 기반 검증</p>
+            </div>
+          </div>
+          <div class="prevent-item">
+            <div class="prevent-badge warn">추가</div>
+            <div>
+              <strong>최소 권한 원칙</strong>
+              <p>DB 계정에 필요한 최소한의 권한만 부여</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── 체크리스트 섹션 ── -->
+    <section class="checklist-section">
+      <h3>보안 점검 체크리스트</h3>
+      <div class="checklist-grid">
+        <label class="check-item"><input type="checkbox" /><span>모든 DB 쿼리에 Prepared Statement 사용</span></label>
+        <label class="check-item"><input type="checkbox" /><span>사용자 입력값에 특수문자 이스케이프 처리</span></label>
+        <label class="check-item"><input type="checkbox" /><span>DB 계정 최소 권한 원칙 적용</span></label>
+        <label class="check-item"><input type="checkbox" /><span>에러 메시지에 DB 정보 노출 방지</span></label>
+        <label class="check-item"><input type="checkbox" /><span>WAF(웹 애플리케이션 방화벽) 배포</span></label>
+        <label class="check-item"><input type="checkbox" /><span>정기적인 보안 취약점 스캔 수행</span></label>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <p>⚠ 이 도구는 <strong>교육 목적</strong>으로만 제작되었습니다. 실제 시스템에 대한 무단 공격은 불법입니다.</p>
+  </footer>
+
+  <script src="script.js"></script>
 </body>
 </html>
